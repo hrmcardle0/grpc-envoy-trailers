@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pb";
+
+import "google/protobuf/empty.proto";
+
+service ExternalProcessor {
+  rpc Process(stream ProcessingRequest) returns (stream ProcessingResponse);
+}
+
+message ProcessingRequest {
+  // Define fields for request types, such as headers, bodies, trailers, etc.
+}
+
+message ProcessingResponse {
+  // Define fields for response types, such as headers, bodies, trailers, etc.
+}

@@ -1,0 +1,96 @@
+# Client Deployment and Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-client
+  template:
+    metadata:
+      labels:
+        app: grpc-client
+    spec:
+      imagePullSecrets:
+        - name: ${IMAGE_PULL_SECRET_NAME}
+      containers:
+      - name: client
+        image: ${CLIENT_IMAGE}
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-client-service
+spec:
+  selector:
+    app: grpc-client
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9898
+  type: ClusterIP
+
+# Server Deployment and Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grpc-server
+  template:
+    metadata:
+      labels:
+        app: grpc-server
+    spec:
+      imagePullSecrets:
+        - name: ${IMAGE_PULL_SECRET_NAME}
+      initContainers:
+      - name: init
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p /tmp/envoy-logs && chmod 777 /tmp/envoy-logs']
+        volumeMounts:
+          - name: envoy-logs
+            mountPath: /tmp/envoy-logs  # Mount the volume to the init container
+      containers:
+      - name: server
+        image: ${SERVER_IMAGE}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+      - name: envoy
+        image: envoyproxy/envoy:v1.22.0
+        args:
+        - --config-path /etc/envoy/envoy.yaml
+        - -l debug
+        volumeMounts:
+        - name: envoy-config
+          mountPath: /etc/envoy
+        - name: envoy-logs
+          mountPath: /tmp/envoy-logs  # Mount the volume to the container
+      volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config
+        - name: envoy-logs
+          persistentVolumeClaim:
+            claimName: envoy-log-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-server-service
+spec:
+  selector:
+    app: grpc-server
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9001
+  type: ClusterIP

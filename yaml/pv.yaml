@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: envoy-log-pv
+spec:
+  capacity:
+    storage: 1Gi  # Define the size of the PV
+  accessModes:
+    - ReadWriteOnce  # The PV can be mounted as read-write by a single node
+  hostPath:
+    path: /tmp/envoy
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: envoy-log-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
