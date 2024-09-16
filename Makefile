@@ -26,4 +26,4 @@ build-server:
 PHONY: build-external
 build-external:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o externalprocessor/externalprocessor externalprocessor/main.go
-	ocker buildx build --platform linux/amd64 -t envoy-grpc-trailer-externalprocessor -f externalprocessor/Dockerfile --load .
+	docker buildx build --platform linux/amd64 -t envoy-grpc-trailer-externalprocessor -f externalprocessor/Dockerfile --load .
